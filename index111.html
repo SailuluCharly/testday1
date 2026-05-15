@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌈｜隐藏偏好属性测试</title>
+<style>
+:root{
+  --bg:#0e0f14; --card:#1a1b22; --card2:#272832; --text:#f6f2f4;
+  --muted:#b9b2b8; --pink:#ff7ca8; --pink2:#ffc1d4;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:radial-gradient(circle at top left, rgba(255,124,168,.16), transparent 32%),
+             radial-gradient(circle at bottom right, rgba(140,120,255,.15), transparent 34%),
+             var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Arial,sans-serif;
+}
+.container{width:100%;max-width:820px;margin:0 auto;padding:22px}
+.card{
+  background:rgba(26,27,34,.94); border:1px solid rgba(255,255,255,.06);
+  border-radius:26px; padding:24px; margin:18px 0;
+  box-shadow:0 20px 60px rgba(0,0,0,.26); backdrop-filter:blur(12px);
+}
+h1{font-size:32px;line-height:1.18;margin:0 0 14px}
+h2{font-size:22px;line-height:1.5;margin:0 0 18px}
+h3{font-size:18px;margin:26px 0 12px}
+p{line-height:1.82;color:var(--muted)}
+.notice{border-left:3px solid var(--pink);padding-left:12px}
+button{
+  width:100%; padding:15px 16px; border:none; border-radius:16px; margin-top:12px;
+  background:linear-gradient(135deg,#ff7ca8,#ff5d94); color:white; font-size:16px; line-height:1.45;
+}
+.option{background:var(--card2);text-align:left;border:1px solid rgba(255,255,255,.06)}
+.secondary{background:#2b2c35}
+.ghost{background:transparent;border:1px solid rgba(255,255,255,.18);color:#ded6dc}
+.progress{height:8px;background:#2b2c33;border-radius:999px;overflow:hidden;margin:18px 0}
+.bar{height:100%;width:0%;background:linear-gradient(90deg,#ff7ca8,#ffc1d4);transition:.25s}
+.small{font-size:13px;color:#928b91}
+.hidden{display:none}
+.result-desc{white-space:pre-line;color:#d8d1d7;line-height:1.9}
+.motto{
+  text-align:center;font-size:21px;line-height:1.7;color:#fff;margin:34px 0 30px;padding:22px 8px;
+  border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);letter-spacing:.02em;
+}
+.tag{display:inline-block;padding:8px 12px;background:#2b2c33;border:1px solid rgba(255,255,255,.06);border-radius:999px;margin:5px;font-size:14px;color:#ffe4ee}
+.radar-wrap{margin:12px auto 18px;width:min(100%,400px)}
+#radar{width:100%;height:auto;display:block}
+.radar-list{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-top:12px}
+.radar-item{background:#252630;border:1px solid rgba(255,255,255,.05);border-radius:12px;padding:9px 10px;font-size:14px;display:flex;justify-content:space-between}
+@media(max-width:480px){
+  .container{padding:16px}.card{padding:20px}h1{font-size:29px}h2{font-size:20px}
+  .radar-list{grid-template-columns:1fr}.motto{font-size:19px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<section id="start" class="card">
+  <h1>🌈｜隐藏偏好属性测试</h1>
+  <p class="notice">在对亲密关系的探寻过程中，有些人沉迷偏爱，有些人沉迷掌控。真正让你上头的，究竟是什么？</p>
+  <p>25题｜约5分钟</p>
+  <button onclick="startTest()">开始测试</button>
+  <p class="small">仅供娱乐与自我观察。题目会通过关系场景、边界感、规则感与情绪反应进行测试。</p>
+</section>
+
+<section id="quiz" class="hidden">
+  <div class="progress"><div id="bar" class="bar"></div></div>
+  <div class="card">
+    <p id="step" class="small"></p>
+    <h2 id="question"></h2>
+    <div id="options"></div>
+    <button id="backBtn" class="ghost hidden" onclick="goBack()">返回上一题重新选择</button>
+  </div>
+</section>
+
+<section id="result" class="hidden card">
+  <p class="small">你的隐藏偏好属性结果：</p>
+  <h1 id="resultTitle"></h1>
+  <p id="resultDesc" class="result-desc"></p>
+  <div id="motto" class="motto"></div>
+  <h3>你的标签</h3>
+  <div id="tags"></div>
+  <h3>成分雷达图</h3>
+  <div class="radar-wrap"><canvas id="radar" width="760" height="760"></canvas></div>
+  <div id="radarList" class="radar-list"></div>
+  <button onclick="copyResult()">复制结果</button>
+  <button class="secondary" onclick="location.reload()">重新测试</button>
+</section>
+
+</div>
+
+<script>
+const questions = [
+{q:"关系开始变得有点混乱时，你更容易：",a:[["先把节奏稳住，不让局面继续散掉",{dom:2,control:1,caregiver:1}],["顺着气氛沉进去，看看会被带到哪里",{sub:2,sensory:1}],["故意再推一下，看对方会不会接住",{brat:2,tease:1}]]},
+{q:"刚开始进入一段微妙关系时，你更习惯：",a:[["主动推进一点，让关系有方向",{dom:2,control:1}],["先观察对方的节奏，再慢慢回应",{switch:1,sub:1,boundary:1}],["留一点悬念，让对方自己靠近",{tease:2,brat:1}]]},
+{q:"被喜欢的人认真注视时，你更像：",a:[["继续对视，看看对方能不能稳住",{dom:2,tease:1}],["会被击中，但不一定会立刻表现出来",{sub:1,exposure:2}],["下意识改变气氛，让场面更微妙",{tease:2,sensory:1}]]},
+{q:"你更容易对哪种状态上头：",a:[["关系里有明确方向和掌控感",{dom:1,control:2}],["被稳定带入一个只属于彼此的节奏",{sub:2,ritual:1}],["被反复试探、挑衅和拉扯",{brat:2,tease:1}]]},
+{q:"你更容易被哪类人吸引：",a:[["气场稳定、能自然接管局面的人",{sub:2,careseeker:1}],["需要被照顾、会慢慢依赖自己的人",{caregiver:2,dom:1}],["反应有层次、很难一下看透的人",{tease:1,brat:1,switch:1}]]},
+{q:"如果关系里出现固定规则，你会：",a:[["觉得安心，关系终于有了结构",{ritual:1,control:2}],["想试试看自己能不能适应进去",{sub:1,ritual:1,switch:1}],["会忍不住想挑战一下规则边缘",{brat:2,boundary:1}]]},
+{q:"你会不会对重复的小互动产生依赖：",a:[["会，重复越久越像某种专属标记",{ritual:2,careseeker:1}],["要看对象，安全的人才会让我依赖",{switch:1,sub:1,careseeker:1}],["不太会，我更喜欢互动保持变化",{tease:1,boundary:2}]]},
+{q:"被长期稳定地照顾，会让你：",a:[["慢慢卸下防备，越来越依赖",{careseeker:2,sub:1}],["觉得温柔，但也会想保留一点空间",{switch:1,boundary:1}],["反而想回馈、接住对方更多",{caregiver:2,control:1}]]},
+{q:"你更享受哪种关系节奏：",a:[["自己掌握方向，对方跟着进入",{dom:2,control:1}],["被对方慢慢带走，逐渐沉进去",{sub:2,sensory:1}],["两个人互相试探，谁也不完全交牌",{brat:1,tease:2}]]},
+{q:"你会不会故意制造一点拉扯感：",a:[["会，这是确认关系张力的一种方式",{tease:2,brat:1}],["偶尔会，但更多是看气氛变化",{switch:2,sensory:1}],["不太会，我更喜欢关系清楚稳定",{control:1,caregiver:1}]]},
+{q:"你更容易在哪种氛围里沉进去：",a:[["被清楚安排、慢慢引导的氛围",{sub:2,control:1}],["被固定仪式和专属规则包围的氛围",{ritual:2,careseeker:1}],["忽近忽远、带一点危险感的氛围",{tease:2,sensory:1}]]},
+{q:"当别人开始依赖你时，你会：",a:[["自然进入守护状态，想照顾得更稳",{caregiver:2,dom:1}],["感到被需要，但也会观察关系是否平衡",{switch:1,control:1}],["享受这种依赖带来的节奏掌控感",{dom:2,control:1}]]},
+{q:"你更容易通过什么方式确认偏爱：",a:[["对方愿意遵守只属于你们的固定互动",{ritual:2,careseeker:1}],["对方在关键时刻会把你放在优先位置",{careseeker:2,sub:1}],["对方愿意被你影响、被你带着走",{dom:1,caregiver:1,control:1}]]},
+{q:"如果对方开始情绪失控，你会：",a:[["先接管局面，让她回到安全范围",{dom:2,caregiver:1}],["先接住情绪，不急着纠正她",{caregiver:2,ritual:1}],["看她失控到什么程度，再决定要不要继续刺激",{brat:1,tease:2}]]},
+{q:"你会不会因为一句话反复想很久：",a:[["会，尤其是带有暗示感的话",{sub:1,sensory:1,exposure:1}],["会，但我通常会把它整理成某种判断",{control:1,switch:1}],["会，而且会想办法让对方也开始想我",{tease:2,brat:1}]]},
+{q:"被看穿情绪时，你更像：",a:[["会慌，但其实有点被击中",{sub:1,exposure:2}],["会迅速把自己收回来",{boundary:2,control:1}],["会顺势把气氛推得更暧昧",{tease:2,sensory:1}]]},
+{q:"你更容易在哪种状态里放下戒备：",a:[["被稳定照顾，并且不用解释太多",{careseeker:2,sub:1}],["对方足够明确，能自然带着我走",{sub:2,control:1}],["对方能接住我的试探和反复",{brat:2,careseeker:1}]]},
+{q:"你更偏向稳定感还是刺激感：",a:[["稳定感，关系最好有清楚结构",{control:2,ritual:1}],["刺激感，情绪波动会让我更投入",{sensory:2,tease:1}],["两者都要，看对象和气氛切换",{switch:2}]]},
+{q:"你更容易掌控气氛，还是被气氛影响：",a:[["我会主动掌控气氛",{dom:2,tease:1}],["我更容易被气氛带走",{sub:2,sensory:1}],["我会根据对方的状态切换",{switch:2}]]},
+{q:"如果关系里有只属于彼此的小规则，你会：",a:[["认真维护，因为这代表专属关系",{ritual:2,control:1}],["享受被规则包围的归属感",{sub:1,ritual:2}],["想看看这些规则能不能被我撬动",{brat:2,tease:1}]]},
+{q:"你更容易靠近别人，还是等别人靠近：",a:[["我会主动靠近，并试着带动关系",{dom:1,caregiver:1}],["我会等对方给出足够安全的信号",{sub:1,careseeker:1,boundary:1}],["我会让对方以为是她先靠近的",{tease:2,control:1}]]},
+{q:"你会不会故意试探关系边界：",a:[["会，想知道对方能不能接住我",{brat:2,careseeker:1}],["偶尔会，但更像调节气氛",{tease:1,switch:1}],["不会，我更倾向于建立清楚边界",{control:2,boundary:1}]]},
+{q:"你更容易沉迷哪种互动：",a:[["被明确安排和引导的互动",{sub:2,control:1}],["固定、重复、越来越专属的互动",{ritual:2,careseeker:1}],["你来我往、不断升温的互动",{tease:2,brat:1}]]},
+{q:"当别人突然冷淡时，你会：",a:[["想确认问题，然后重新建立秩序",{control:2,dom:1}],["开始内耗，但会等待对方回来",{careseeker:1,sub:1}],["也冷下来，看谁先忍不住",{brat:1,tease:1,boundary:1}]]},
+{q:"你希望理想关系更像：",a:[["有规则、有方向、彼此知道位置",{control:2,dom:1,ritual:1}],["有照料、有归属、可以慢慢沉进去",{careseeker:2,sub:1,ritual:1}],["有张力、有试探、永远不会太无聊",{tease:2,brat:1,sensory:1}]]}
+];
+
+let scores={dom:0,sub:0,switch:0,caregiver:0,careseeker:0,ritual:0,control:0,brat:0,tease:0,sensory:0,exposure:0,boundary:0};
+let current=0, history=[], finalResult=null, finalStats=[];
+
+const results=[
+{name:"Dom1｜支配者",score:s=>s.dom+s.control*.45+s.caregiver*.2,desc:`你很容易在关系里进入“主导气氛”的位置。你不一定会强势表达自己，但会下意识安排节奏、稳定方向、推动关系继续向前。你对混乱和失控的耐受度不高，所以很多时候别人还在犹豫，你已经开始接管局面。
+
+你不太喜欢模糊关系，也不喜欢完全被动等待。比起被别人带着走，你更习惯先确认方向，再决定要不要把人真正放进自己的领域。你会让人产生一种很明显的感觉：只要你还在，关系就不会彻底失衡。
+
+很多人会在不知不觉里开始依赖你的节奏感，因为你身上有一种天然的稳定压迫感。`,motto:"「先别慌，跟着我。」",tags:["#节奏掌控","#稳定推进","#关系主导","#安全压迫感"]},
+{name:"Dom0｜隐性支配者",score:s=>s.dom*.75+s.tease*.65+s.boundary*.55,desc:`你很少直接表达掌控欲。你更擅长的是观察、留白、拉开距离，然后让别人自己一步一步走进你的节奏。很多时候你甚至不需要主动靠近，只要稍微改变一点反应和气氛，对方就会开始反复猜测你的态度。
+
+你身上有一种很明显的冷感吸引力。不是因为你真的冷淡，而是你太擅长控制自己的暴露程度。你知道什么时候该靠近，什么时候该停顿，也知道怎样让关系保持一种危险但不会彻底断掉的张力。
+
+很多人会在想读懂你的过程中慢慢失衡，而你只是安静地站在那里，看着气氛一点点倾斜。`,motto:"「你可以继续猜。」",tags:["#危险留白","#冷感操控","#情绪压制","#慢性拉扯"]},
+{name:"Sub1｜忠诚追随者",score:s=>s.sub+s.careseeker*.35+s.ritual*.25,desc:`你不会轻易真正依赖别人，但一旦确认自己被认真接住，你会非常愿意把情绪交出去。你对偏爱感和稳定回应的感知很强，只要察觉到“自己是被认真选择的”，你就会慢慢卸下防备。
+
+你不是单纯的依赖，也不是没有位置感。你的交付里带着筛选和确认，像是把选择权握在自己手里，然后只交给那个真正值得的人。很多人会觉得你很真诚，因为你一旦开始回应，就很难只是玩玩而已。
+
+你真正想要的从来不是短暂刺激，而是一种可以长期停留的安心感。`,motto:"「不是谁都值得我臣服。」",tags:["#偏爱沉降","#稳定依赖","#长期回应","#高位交付"]},
+{name:"Sub0｜虔诚祷告者",score:s=>s.sub*.85+s.sensory*.6+s.exposure*.45,desc:`你很容易被氛围、压迫感和情绪张力慢慢带进关系里。很多时候你甚至不是主动靠近，而是在一次次细微互动里逐渐失守。你对情绪气氛的感知非常强，也很容易在关系里进入沉浸状态。
+
+你未必会把自己的需求说出来，但别人一句轻微的暗示、一次明显的引导、一个固定的小习惯，都可能让你在心里反复回放很久。你身上有一种很明显的“沉进去”的能力。
+
+很多人以为你安静，其实你只是太容易被关系影响。`,motto:"「再靠近一点，我就真的逃不掉了。」",tags:["#氛围沉浸","#情绪失守","#压迫感依赖","#关系下沉"]},
+{name:"Switch｜信号调频者",score:s=>s.switch*1.35+Math.min(s.dom,s.sub)*.65+Math.min(s.control,s.sensory)*.35,desc:`你不是固定位置的人。你会根据对象、气氛、安全感和关系阶段不断变化自己的状态。有时候你会很自然地掌控气氛，有时候又会突然开始依赖别人。
+
+你最大的特点不是摇摆，而是对关系频率的感知太强。你很容易进入互动，也很容易因为对方的状态变化而改变自己的位置。很多人会觉得你难猜，因为你从来不是单一结构。
+
+真正适合你的人，往往也需要足够敏锐。因为只有能接住你变化的人，才能真正进入你的频道。`,motto:"「你想要的样子，我都可以有。」",tags:["#双向流动","#关系调频","#状态切换","#互动感知"]},
+{name:"Caregiver｜守护骑士",score:s=>s.caregiver*1.25+s.dom*.25+s.control*.25,desc:`你很容易在关系里进入照顾者的位置。你会下意识接住情绪、稳定局面、记住细节，也会习惯性地替别人提前考虑很多事。很多时候你甚至比对方更早察觉到问题。
+
+你不一定很会表达自己，但会通过行动、陪伴和长期稳定去建立关系。你真正享受的其实不是掌控，而是“有人开始慢慢依赖你”的感觉。
+
+你身上的安全感往往不是热烈的，而是持续存在的。`,motto:"「没关系，我会接住你。」",tags:["#长期偏爱","#稳定供给","#守护欲","#照料关系"]},
+{name:"Careseeker｜依附寻求者",score:s=>s.careseeker*1.25+s.sub*.3+s.ritual*.2,desc:`你很容易对长期稳定的照顾产生依赖感。你真正上头的从来不是轰轰烈烈，而是那些持续性的偏爱和惦记。别人一句稳定回应，可能都会在你心里停留很久。
+
+你并不脆弱，只是太容易记住温柔。你会因为被长期放在心上而慢慢沉进去，也会因为关系里的安全感逐渐卸下防备。
+
+很多时候你想要的不是激情，而是“有人一直都在”。`,motto:"「你会一直陪着我吗？」",tags:["#长期驯养","#稳定依赖","#被照顾需求","#慢性沉降"]},
+{name:"Ritual｜仪式监管人",score:s=>s.ritual*1.35+s.control*.25+s.careseeker*.2,desc:`你会对关系里的固定互动和专属规则产生很深的沉浸感。很多人以为你在意的是规则本身，但其实你真正上头的是那种“只有彼此才知道”的专属感。
+
+你很容易对重复性的互动产生依赖，也会在长期建立的默契和结构里获得安全感。那些固定出现的小细节，会比短暂激情更容易真正击中你。
+
+你喜欢关系拥有秩序，也喜欢长期稳定地维持某种专属连接。`,motto:"「重复本身，就是一种偏爱。」",tags:["#规则沉浸","#专属互动","#长期仪式","#关系结构控"]},
+{name:"Control｜秩序判官",score:s=>s.control*1.35+s.boundary*.35+s.dom*.25,desc:`你对混乱关系的耐受度很低。你会下意识建立边界、规则、结构和分寸感，也会本能地控制关系里的节奏和范围。
+
+你未必是为了掌控别人，很多时候你只是需要关系处于一个“可以被理解”的状态。你会在秩序感里获得安全感，也会因为成功建立结构而感到满足。
+
+你不喜欢完全失控的互动，因为那会让你产生非常强的不稳定感。`,motto:"「规则之外的东西，不值得信任。」",tags:["#结构控制","#秩序偏执","#边界管理","#规则建立"]},
+{name:"Brat｜叛逆甜心",score:s=>s.brat*1.4+s.tease*.25+s.careseeker*.15,desc:`你很会试探边界，也很擅长制造情绪波动。很多时候你并不是真的想逃，只是会通过挑衅、拉扯和故意不配合去确认对方到底会不会继续靠近。
+
+你身上有一种很明显的反向互动感。你会一边后退，一边观察别人会不会追上来；一边嘴硬，一边偷偷期待有人能真正接住你。
+
+你真正想要的从来不是混乱，而是“有人能稳稳承受你的不安”。`,motto:"「你不会真的生气了吧？」",tags:["#危险试探","#反向拉扯","#边界挑战","#情绪点火"]},
+{name:"Tease｜极限操盘手",score:s=>s.tease*1.35+s.sensory*.35+s.dom*.15,desc:`你很会制造情绪波动和关系张力。你知道什么时候该靠近、什么时候该停顿，也知道怎样让气氛慢慢升温。很多时候你甚至不用真正做什么，仅仅只是一个反应，就足够让别人开始反复回想。
+
+你擅长的不是直接控制，而是让别人自己沉进去。你会制造期待、留白和悬念，也会让关系始终停留在一种“快要失控但还没彻底失控”的状态里。
+
+很多人会在你的节奏里逐渐开始上头。`,motto:"「别急，气氛才刚开始。」",tags:["#氛围操盘","#危险诱导","#情绪拉扯","#上头制造机"]}
+];
+
+function startTest(){
+ document.getElementById("start").classList.add("hidden");
+ document.getElementById("quiz").classList.remove("hidden");
+ render();
+}
+function render(){
+ const q=questions[current];
+ document.getElementById("step").innerText=`第 ${current+1} / ${questions.length} 题`;
+ document.getElementById("bar").style.width=((current/questions.length)*100)+"%";
+ document.getElementById("question").innerText=q.q;
+ const box=document.getElementById("options"); box.innerHTML="";
+ q.a.forEach(opt=>{
+   const btn=document.createElement("button");
+   btn.className="option"; btn.innerText=opt[0]; btn.onclick=()=>choose(opt[1]);
+   box.appendChild(btn);
+ });
+ document.getElementById("backBtn").classList.toggle("hidden", current===0);
+}
+function applyScore(obj, sign=1){Object.keys(obj).forEach(k=>scores[k]+=obj[k]*sign)}
+function choose(add){
+ history.push(add);
+ applyScore(add,1);
+ current++;
+ if(current>=questions.length){showResult()}else{render()}
+}
+function goBack(){
+ if(current===0 || history.length===0) return;
+ const last=history.pop();
+ applyScore(last,-1);
+ current--;
+ render();
+}
+function pct(v,max){return Math.min(99,Math.max(10,Math.round((v/max)*100)))}
+function pickResult(){return results.map(r=>({r,score:r.score(scores)})).sort((a,b)=>b.score-a.score)[0].r}
+
+function drawRadar(statList){
+ const canvas=document.getElementById("radar"), ctx=canvas.getContext("2d");
+ const w=canvas.width,h=canvas.height,cx=w/2,cy=h/2,radius=260,count=statList.length,start=-Math.PI/2;
+ ctx.clearRect(0,0,w,h);
+ for(let level=1;level<=5;level++){
+  const r=radius*level/5; ctx.beginPath();
+  for(let i=0;i<count;i++){const a=start+i*2*Math.PI/count,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r; if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}
+  ctx.closePath(); ctx.strokeStyle="rgba(255,255,255,.12)"; ctx.lineWidth=2; ctx.stroke();
+ }
+ for(let i=0;i<count;i++){
+  const a=start+i*2*Math.PI/count;
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*radius,cy+Math.sin(a)*radius); ctx.strokeStyle="rgba(255,255,255,.10)"; ctx.stroke();
+  ctx.fillStyle="rgba(246,242,244,.9)"; ctx.font="25px -apple-system,BlinkMacSystemFont,PingFang SC,sans-serif"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText(statList[i][0],cx+Math.cos(a)*(radius+60),cy+Math.sin(a)*(radius+60));
+ }
+ ctx.beginPath();
+ statList.forEach(([label,val],i)=>{const a=start+i*2*Math.PI/count,r=radius*val/100,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r; if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});
+ ctx.closePath(); ctx.fillStyle="rgba(255,124,168,.28)"; ctx.fill(); ctx.strokeStyle="rgba(255,124,168,.95)"; ctx.lineWidth=5; ctx.stroke();
+ statList.forEach(([label,val],i)=>{const a=start+i*2*Math.PI/count,r=radius*val/100; ctx.beginPath(); ctx.arc(cx+Math.cos(a)*r,cy+Math.sin(a)*r,8,0,Math.PI*2); ctx.fillStyle="#ff7ca8"; ctx.fill()});
+}
+function showResult(){
+ document.getElementById("quiz").classList.add("hidden");
+ document.getElementById("result").classList.remove("hidden");
+ finalResult=pickResult();
+ document.getElementById("resultTitle").innerText=finalResult.name;
+ document.getElementById("resultDesc").innerText=finalResult.desc;
+ document.getElementById("motto").innerText=finalResult.motto;
+ finalStats=[
+  ["Dom",pct(scores.dom,10)],["Sub",pct(scores.sub,10)],["Switch",pct(scores.switch,5)],["规则",pct(scores.control+scores.boundary*.35,10)],
+  ["仪式",pct(scores.ritual,8)],["照料",pct(scores.caregiver+scores.careseeker*.35,10)],["拉扯",pct(scores.tease+scores.brat*.35,10)],["刺激",pct(scores.sensory+scores.exposure*.45,8)]
+ ];
+ drawRadar(finalStats);
+ const list=document.getElementById("radarList"); list.innerHTML="";
+ finalStats.forEach(([name,val])=>{const div=document.createElement("div"); div.className="radar-item"; div.innerHTML=`<span>${name}</span><strong>${val}%</strong>`; list.appendChild(div)});
+ const tags=document.getElementById("tags"); tags.innerHTML="";
+ finalResult.tags.forEach(t=>{const span=document.createElement("span"); span.className="tag"; span.innerText=t; tags.appendChild(span)});
+}
+function copyResult(){
+ const statsText=finalStats.map(s=>`${s[0]} ${s[1]}%`).join("\\n");
+ const text=`我的隐藏偏好属性结果：${finalResult.name}\\n\\n${finalResult.desc}\\n\\n${finalResult.motto}\\n\\n${finalResult.tags.join(" ")}\\n\\n成分分析：\\n${statsText}`;
+ if(navigator.clipboard){navigator.clipboard.writeText(text).then(()=>alert("结果已复制"))}else{alert(text)}
+}
+</script>
+</body>
+</html>
